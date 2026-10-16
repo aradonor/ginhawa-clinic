@@ -1,0 +1,83 @@
+/* Ginhawa design tokens, sampled from the Canva design */
+@import url("./fonts.css");
+
+:root {
+  --gh-red: #d03434;
+  --gh-red-dark: #b32a2a;
+  --gh-blue: #3e7dd0;
+  --gh-blue-dark: #2f66b3;
+  --gh-purple: #644cdc;
+  --gh-coral: #cd6769;
+  --gh-ink: #111111;
+  --gh-muted: #5a5a5a;
+  --gh-line: #c9c9c9;
+  --gh-bg: #ffffff;
+  --gh-soft: #f4f7fc;
+  --gh-page: #f5f8fd;
+  --gh-border: #e4e9f2;
+  --gh-shadow: 0 8px 28px rgba(38, 62, 120, 0.07);
+
+  /* Calm status colours for badges and highlights */
+  --gh-green: #2c9a68;
+  --gh-green-soft: #e5f5ed;
+  --gh-amber: #a96b0d;
+  --gh-amber-soft: #fdf2dc;
+  --gh-red-soft: #fdeaea;
+  --gh-blue-soft: #e8f0fb;
+  --gh-grey: #596273;
+  --gh-grey-soft: #eceff4;
+
+  /* Lovelo Black is the display face in the Canva file. It is a paid font,
+     so Montserrat 800 stands in until fonts.css has a licensed copy. */
+  --font-display: "Lovelo Black", "Montserrat", "Poppins", sans-serif;
+  --font-body: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-pill: 999px;
+  --radius-box: 30px;
+  --page-gutter: clamp(1.25rem, 4.8vw, 4.4rem);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--gh-bg);
+  color: var(--gh-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--gh-blue);
+}
+
+:focus-visible {
+  outline: 3px solid var(--gh-purple);
+  outline-offset: 3px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

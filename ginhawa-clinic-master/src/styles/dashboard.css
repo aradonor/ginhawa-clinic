@@ -1,0 +1,287 @@
+/* ---------- Collapsible Hover Portal Shell ---------- */
+
+.dash {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--gh-page);
+  transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dash__side {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 5rem;
+  padding: 1.25rem 0.75rem;
+  border-right: 1px solid #e3e6ec;
+  background: #fff;
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: 100;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover / Focus Expand Effect */
+.dash__side:hover,
+.dash__side:focus-within {
+  width: 17.5rem;
+  padding: 1.5rem 1.25rem;
+  box-shadow: 8px 0 32px rgba(38, 62, 120, 0.12);
+}
+
+/* Brand Logo Transition */
+.dash__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.dash__brand img {
+  display: block;
+  width: 100%;
+  max-width: 2.8rem;
+  height: auto;
+  object-fit: contain;
+  transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dash__side:hover .dash__brand img,
+.dash__side:focus-within .dash__brand img {
+  max-width: 13.5rem;
+}
+
+.dash__toggle { display: none; }
+
+.dash__menu {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-top: 1.75rem;
+  width: 100%;
+}
+
+/* Portal Subtitle Fade */
+.dash__portal {
+  margin: 0 0 0.75rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gh-muted);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dash__side:hover .dash__portal,
+.dash__side:focus-within .dash__portal {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.dash__menu ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+/* Navigation Link Items */
+.dash__link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  height: 2.85rem;
+  padding: 0 0.85rem;
+  border-radius: var(--radius-pill);
+  color: var(--gh-ink);
+  font-size: 0.93rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dash__link:hover {
+  background: var(--gh-soft);
+  color: var(--gh-blue-dark);
+}
+
+.dash__link-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+.dash__link-text {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dash__side:hover .dash__link-text,
+.dash__side:focus-within .dash__link-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Active Nav State */
+.dash__link.is-active {
+  background: var(--gh-blue);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(62, 125, 208, 0.28);
+}
+
+/* User Card at Bottom */
+.dash__user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding: 0.5rem;
+  border-radius: 1.2rem;
+  background: var(--gh-soft);
+  overflow: hidden;
+  transition: padding 0.3s ease;
+}
+
+.dash__side:hover .dash__user,
+.dash__side:focus-within .dash__user {
+  padding: 0.75rem;
+}
+
+.dash__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--gh-blue);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.dash__user-info {
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dash__side:hover .dash__user-info,
+.dash__side:focus-within .dash__user-info {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.dash__user strong { display: block; font-size: 0.9rem; font-weight: 600; line-height: 1.25; }
+.dash__user span:not(.dash__avatar) { display: block; font-size: 0.78rem; color: var(--gh-muted); text-transform: capitalize; }
+
+/* Logout Button */
+.dash__logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+  height: 2.7rem;
+  padding: 0 0.85rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--gh-red);
+  color: #fff;
+  font: 600 0.92rem var(--font-body);
+  white-space: nowrap;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.dash__logout:hover {
+  background: var(--gh-red-dark);
+  transform: translateY(-1px);
+}
+
+.dash__logout-text {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dash__side:hover .dash__logout-text,
+.dash__side:focus-within .dash__logout-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Main Content Area */
+.dash__main {
+  min-width: 0;
+  padding: 2.25rem clamp(1.25rem, 3vw, 3rem) 3rem;
+}
+
+.dash__title {
+  margin: 0 0 1.5rem;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Mobile Drawer Slide-Down */
+@media (max-width: 900px) {
+  .dash { grid-template-columns: 1fr; }
+  .dash__side {
+    position: static;
+    height: auto;
+    width: 100% !important;
+    padding: 1rem 1.25rem !important;
+    border-right: 0;
+    border-bottom: 1px solid #e3e6ec;
+    box-shadow: none !important;
+  }
+  .dash__brand { justify-content: space-between; }
+  .dash__brand img { max-width: 11rem !important; }
+  .dash__toggle {
+    display: inline-block;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid var(--gh-ink);
+    border-radius: var(--radius-pill);
+    background: #fff;
+    font: 600 0.9rem var(--font-body);
+    cursor: pointer;
+  }
+  .dash__menu {
+    display: flex;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(-10px);
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.3s ease;
+  }
+  .dash__side.is-open .dash__menu {
+    max-height: 500px;
+    opacity: 1;
+    transform: translateY(0);
+    margin-top: 1rem;
+  }
+  .dash__portal, .dash__link-text, .dash__user-info, .dash__logout-text {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

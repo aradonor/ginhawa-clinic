@@ -1,0 +1,10 @@
+/* To match the Canva design exactly, add a licensed copy of Lovelo Black at
+   src/assets/fonts/Lovelo-Black.woff2 and uncomment this block.
+
+@font-face {
+  font-family: "Lovelo Black";
+  src: url("../assets/fonts/Lovelo-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-display: swap;
+}
+*/

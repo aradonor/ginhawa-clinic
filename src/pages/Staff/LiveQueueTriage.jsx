@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
+import Badge from "../../components/ui/Badge";
+import EmptyState from "../../components/ui/EmptyState";
+import Icon from "../../components/ui/Icon";
+import Loading from "../../components/ui/Loading";
 
 export default function LiveQueueTriage() {
   const [patients, setPatients] = useState([]);
-  const [doctors, setDoctors] = useState([]);
   const [queue, setQueue] = useState([]);
 
   const [triageData, setTriageData] = useState({
@@ -20,10 +23,10 @@ export default function LiveQueueTriage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     try {
-      // Fetch patients, queue items, and profile/user list
       const [queueRes, patientRes] = await Promise.all([
         API.get("/staff/queue"),
         API.get("/staff/patients"),
@@ -49,10 +52,11 @@ export default function LiveQueueTriage() {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setSubmitting(true);
 
     try {
       await API.post("/staff/triage", triageData);
-      setSuccess("Triage completed and patient added to queue!");
+      setSuccess("Triage completed! Patient added to live doctor queue.");
       setTriageData({
         patientId: "",
         doctorId: "",
@@ -63,42 +67,47 @@ export default function LiveQueueTriage() {
         height: "",
         chiefComplaint: "",
       });
-      fetchData(); // Refresh queue list
+      fetchData();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to record triage data");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleStatusChange = async (queueId, newStatus) => {
     try {
       await API.put(`/staff/queue/${queueId}/status`, { status: newStatus });
-      fetchData(); // Refresh queue list
+      fetchData();
     } catch (err) {
       alert("Failed to update queue status");
     }
   };
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: "40px" }}>Loading queue & triage...</div>;
+  if (loading) return <Loading text="Loading live queue & triage station…" />;
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px", padding: "10px" }}>
-      {/* Triage Form */}
-      <div>
-        <h3>Patient Triage & Vital Signs</h3>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {success && <p style={{ color: "green" }}>{success}</p>}
+    <div className="pt">
+      <p className="pt-lead">Record vital signs at reception and manage the active doctor consultation queue.</p>
 
-        <form onSubmit={handleTriageSubmit}>
-          <div style={{ marginBottom: "10px" }}>
-            <label>Select Patient:</label><br />
+      {error && <p className="ui-alert ui-alert--error" role="alert">{error}</p>}
+      {success && <p className="ui-alert ui-alert--success" role="status">{success}</p>}
+
+      <div className="pt-book">
+        {/* Left Column: Triage Form */}
+        <form className="ui-card ui-stack" onSubmit={handleTriageSubmit}>
+          <h2 className="pt-section-title" style={{ margin: 0 }}>Triage & Patient Vitals</h2>
+
+          <div className="ui-field">
+            <label htmlFor="patientId">Select Patient</label>
             <select
+              id="patientId"
               name="patientId"
               value={triageData.patientId}
               onChange={handleChange}
               required
-              style={{ width: "100%", padding: "8px", marginTop: "5px" }}
             >
-              <option value="">-- Choose Patient --</option>
+              <option value="">Choose patient for triage</option>
               {patients.map((p) => (
                 <option key={p._id} value={p._id}>
                   {p.name} ({p.phone || p.email})
@@ -107,53 +116,52 @@ export default function LiveQueueTriage() {
             </select>
           </div>
 
-          <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-            <div style={{ flex: 1 }}>
-              <label>Blood Pressure (BP):</label>
+          <div className="pt-two">
+            <div className="ui-field">
+              <label htmlFor="bp">Blood Pressure (BP)</label>
               <input
+                id="bp"
                 type="text"
                 name="bp"
                 placeholder="e.g. 120/80"
                 value={triageData.bp}
                 onChange={handleChange}
-                style={{ width: "100%", padding: "8px", marginTop: "5px" }}
               />
             </div>
-            <div style={{ flex: 1 }}>
-              <label>Temperature (°C):</label>
+            <div className="ui-field">
+              <label htmlFor="temperature">Temperature (°C)</label>
               <input
+                id="temperature"
                 type="text"
                 name="temperature"
                 placeholder="e.g. 36.6"
                 value={triageData.temperature}
                 onChange={handleChange}
-                style={{ width: "100%", padding: "8px", marginTop: "5px" }}
               />
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-            <div style={{ flex: 1 }}>
-              <label>Heart Rate (bpm):</label>
+          <div className="pt-two">
+            <div className="ui-field">
+              <label htmlFor="heartRate">Heart Rate (bpm)</label>
               <input
+                id="heartRate"
                 type="text"
                 name="heartRate"
                 placeholder="e.g. 72"
                 value={triageData.heartRate}
                 onChange={handleChange}
-                style={{ width: "100%", padding: "8px", marginTop: "5px" }}
               />
             </div>
-            <div style={{ flex: 1 }}>
-              <label>Weight (kg) / Height (cm):</label>
-              <div style={{ display: "flex", gap: "5px" }}>
+            <div className="ui-field">
+              <label>Weight (kg) / Height (cm)</label>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
                 <input
                   type="text"
                   name="weight"
                   placeholder="Weight"
                   value={triageData.weight}
                   onChange={handleChange}
-                  style={{ width: "50%", padding: "8px", marginTop: "5px" }}
                 />
                 <input
                   type="text"
@@ -161,85 +169,81 @@ export default function LiveQueueTriage() {
                   placeholder="Height"
                   value={triageData.height}
                   onChange={handleChange}
-                  style={{ width: "50%", padding: "8px", marginTop: "5px" }}
                 />
               </div>
             </div>
           </div>
 
-          <div style={{ marginBottom: "15px" }}>
-            <label>Chief Complaint / Symptoms:</label>
+          <div className="ui-field">
+            <label htmlFor="chiefComplaint">Chief Complaint / Symptoms</label>
             <textarea
+              id="chiefComplaint"
               name="chiefComplaint"
-              rows="3"
+              rows={3}
               placeholder="e.g. Mild fever, persistent cough for 3 days"
               value={triageData.chiefComplaint}
               onChange={handleChange}
-              style={{ width: "100%", padding: "8px", marginTop: "5px" }}
             />
           </div>
 
-          <button
-            type="submit"
-            style={{ padding: "10px 20px", backgroundColor: "#007bff", color: "white", border: "none", cursor: "pointer" }}
-          >
-            Submit Triage & Queue Patient
+          <button type="submit" className="ui-btn ui-btn--primary ui-btn--block" disabled={submitting}>
+            <Icon name="check" size={18} />
+            {submitting ? "Saving Triage…" : "Submit Triage & Queue Patient"}
           </button>
         </form>
-      </div>
 
-      {/* Live Queue Monitor */}
-      <div>
-        <h3>Live Clinic Queue</h3>
-        <table border="1" cellPadding="8" cellSpacing="0" style={{ width: "100%", textAlign: "left" }}>
-          <thead>
-            <tr style={{ backgroundColor: "#f0f0f0" }}>
-              <th>Patient</th>
-              <th>Vitals (BP/Temp)</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {queue.map((item) => (
-              <tr key={item._id}>
-                <td>
-                  <strong>{item.patient?.name || "Unknown Patient"}</strong><br />
-                  <small>{item.vitals?.chiefComplaint || "No complaint specified"}</small>
-                </td>
-                <td>
-                  <small>BP: {item.vitals?.bp || "N/A"}</small><br />
-                  <small>Temp: {item.vitals?.temperature ? `${item.vitals.temperature}°C` : "N/A"}</small>
-                </td>
-                <td>
-                  <span style={{
-                    fontWeight: "bold",
-                    color: item.status === "Ready for Doctor" ? "green" : item.status === "In Consultation" ? "blue" : "gray"
-                  }}>
-                    {item.status}
-                  </span>
-                </td>
-                <td>
-                  {item.status === "Ready for Doctor" && (
-                    <button onClick={() => handleStatusChange(item._id, "In Consultation")}>
-                      Send to Doctor
-                    </button>
-                  )}
-                  {item.status === "In Consultation" && (
-                    <button onClick={() => handleStatusChange(item._id, "Completed")}>
-                      Complete
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {queue.length === 0 && (
-              <tr>
-                <td colSpan="4" style={{ textAlign: "center" }}>No patients currently in queue.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        {/* Right Column: Active Queue Card List */}
+        <div className="ui-card">
+          <div style={{ paddingBottom: "1rem", marginBottom: "1.2rem", borderBottom: "1px solid var(--gh-border)" }}>
+            <h2 className="pt-section-title" style={{ margin: 0 }}>Active Clinic Queue ({queue.length})</h2>
+          </div>
+
+          {queue.length === 0 ? (
+            <EmptyState
+              icon="clock"
+              title="Queue is empty"
+              text="No patients are currently waiting in the queue."
+            />
+          ) : (
+            <div className="pt-queue-list">
+              {queue.map((item) => (
+                <div key={item._id} className="pt-queue-item">
+                  <div className="pt-queue-item__head">
+                    <div>
+                      <strong className="pt-queue-item__name">{item.patient?.name || "Unknown Patient"}</strong>
+                      <div className="pt-queue-item__sub">{item.vitals?.chiefComplaint || "No complaint specified"}</div>
+                    </div>
+                    <Badge status={item.status || "Ready for Doctor"} />
+                  </div>
+
+                  <div className="pt-queue-item__vitals">
+                    <span><strong>BP:</strong> {item.vitals?.bp || "N/A"}</span>
+                    <span><strong>Temp:</strong> {item.vitals?.temperature ? `${item.vitals.temperature}°C` : "N/A"}</span>
+                  </div>
+
+                  <div className="pt-queue-item__actions">
+                    {item.status === "Ready for Doctor" && (
+                      <button
+                        onClick={() => handleStatusChange(item._id, "In Consultation")}
+                        className="ui-btn ui-btn--primary ui-btn--sm ui-btn--block"
+                      >
+                        Send to Doctor
+                      </button>
+                    )}
+                    {item.status === "In Consultation" && (
+                      <button
+                        onClick={() => handleStatusChange(item._id, "Completed")}
+                        className="ui-btn ui-btn--ghost ui-btn--sm ui-btn--block"
+                      >
+                        Mark Completed
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

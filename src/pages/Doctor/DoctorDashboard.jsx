@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../../api/axios";
+import { useAuth } from "../../context/AuthContext";
+import Icon from "../../components/ui/Icon";
+import Loading from "../../components/ui/Loading";
+import blob from "../../assets/hero-blob.webp";
+import { greeting, firstName } from "../../utils/format";
 
 export default function DoctorDashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     pendingRequests: 0,
     scheduledToday: 0,
@@ -27,50 +33,87 @@ export default function DoctorDashboard() {
     fetchDashboard();
   }, []);
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: "40px" }}>Loading dashboard...</div>;
+  if (loading) return <Loading text="Preparing your clinical overview…" />;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "850px", margin: "0 auto" }}>
-      <h2>Doctor Dashboard</h2>
-      <p>Welcome back! Here is an overview of your clinic schedule and patient activity.</p>
+    <div className="pt">
+      {/* Welcome Banner */}
+      <section className="ui-card pt-hero" aria-labelledby="welcome-title">
+        <div className="pt-hero__copy">
+          <h2 id="welcome-title">{greeting()}, Dr. {firstName(user?.name)}</h2>
+          <p>
+            Welcome to your clinic dashboard. Review today's queue, manage pending appointment requests, or issue patient prescriptions.
+          </p>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <Link to="/doctor/appointments" className="ui-btn ui-btn--primary">
+              <Icon name="calendar" size={18} /> Manage Appointments
+            </Link>
+            <Link to="/doctor/prescriptions" className="ui-btn ui-btn--ghost">
+              <Icon name="pill" size={18} /> Issue Prescription
+            </Link>
+          </div>
+        </div>
+        <img className="pt-hero__art" src={blob} alt="" aria-hidden="true" />
+      </section>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p className="ui-alert ui-alert--error" role="alert">{error}</p>}
 
-      {/* Stat Cards Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "15px", margin: "25px 0" }}>
-        <div style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "8px", background: "#f9f9f9" }}>
-          <h4>Pending Requests</h4>
-          <p style={{ fontWeight: "bold", fontSize: "1.5rem", color: "#ffc107", marginTop: "10px" }}>
-            {stats.pendingRequests}
-          </p>
-        </div>
-        <div style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "8px", background: "#f9f9f9" }}>
-          <h4>Scheduled Today</h4>
-          <p style={{ fontWeight: "bold", fontSize: "1.5rem", color: "#007bff", marginTop: "10px" }}>
-            {stats.scheduledToday}
-          </p>
-        </div>
-        <div style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "8px", background: "#f9f9f9" }}>
-          <h4>Attended Patients</h4>
-          <p style={{ fontWeight: "bold", fontSize: "1.5rem", color: "#28a745", marginTop: "10px" }}>
-            {stats.attendedPatients}
-          </p>
-        </div>
+      {/* Summary Statistics */}
+      <div className="pt-stats">
+        <Link to="/doctor/appointments" className="ui-card pt-stat">
+          <span className="pt-stat__icon pt-stat__icon--amber">
+            <Icon name="clock" size={22} />
+          </span>
+          <span className="pt-stat__label">Pending Requests</span>
+          <span className="pt-stat__value">{stats.pendingRequests}</span>
+          <span className="pt-stat__hint">Awaiting your review</span>
+        </Link>
+
+        <Link to="/doctor/appointments" className="ui-card pt-stat">
+          <span className="pt-stat__icon pt-stat__icon--blue">
+            <Icon name="calendar" size={22} />
+          </span>
+          <span className="pt-stat__label">Scheduled Today</span>
+          <span className="pt-stat__value">{stats.scheduledToday}</span>
+          <span className="pt-stat__hint">Visits on your schedule</span>
+        </Link>
+
+        <Link to="/doctor/records" className="ui-card pt-stat">
+          <span className="pt-stat__icon pt-stat__icon--green">
+            <Icon name="check" size={22} />
+          </span>
+          <span className="pt-stat__label">Attended Patients</span>
+          <span className="pt-stat__value">{stats.attendedPatients}</span>
+          <span className="pt-stat__hint">Completed consultations</span>
+        </Link>
       </div>
 
-      {/* Quick Actions Section */}
-      <div style={{ marginTop: "35px" }}>
-        <h3>Quick Actions</h3>
-        <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
-          <Link to="/doctor/appointments">
-            <button style={{ padding: "10px 15px", cursor: "pointer" }}>
-              View & Manage Appointments
-            </button>
+      {/* Quick Actions Grid */}
+      <div>
+        <h2 className="pt-section-title">Quick Actions</h2>
+        <div className="pt-stats">
+          <Link to="/doctor/records" className="ui-card pt-stat">
+            <span className="pt-stat__icon pt-stat__icon--blue">
+              <Icon name="file" size={22} />
+            </span>
+            <span className="pt-stat__value" style={{ fontSize: "1.1rem" }}>Add Medical Record</span>
+            <span className="pt-stat__hint">Log patient diagnosis, clinical findings, and treatment notes</span>
           </Link>
-          <Link to="/doctor/prescription">
-            <button style={{ padding: "10px 15px", cursor: "pointer" }}>
-              Issue Prescription & Record
-            </button>
+
+          <Link to="/doctor/prescriptions" className="ui-card pt-stat">
+            <span className="pt-stat__icon pt-stat__icon--green">
+              <Icon name="pill" size={22} />
+            </span>
+            <span className="pt-stat__value" style={{ fontSize: "1.1rem" }}>Prescribe Medication</span>
+            <span className="pt-stat__hint">Issue Rx, auto-deduct inventory, and route to patient billing</span>
+          </Link>
+
+          <Link to="/doctor/settings" className="ui-card pt-stat">
+            <span className="pt-stat__icon pt-stat__icon--amber">
+              <Icon name="settings" size={22} />
+            </span>
+            <span className="pt-stat__value" style={{ fontSize: "1.1rem" }}>Clinic & Profile Settings</span>
+            <span className="pt-stat__hint">Update your specialization, consultation hours, or password</span>
           </Link>
         </div>
       </div>

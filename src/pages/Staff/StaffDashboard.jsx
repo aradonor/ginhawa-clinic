@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../../api/axios";
+import { useAuth } from "../../context/AuthContext";
+import Icon from "../../components/ui/Icon";
+import Loading from "../../components/ui/Loading";
+import blob from "../../assets/hero-blob.webp";
+import { peso, greeting, firstName } from "../../utils/format";
 
 export default function StaffDashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     todayAppointments: 0,
     activeQueue: 0,
@@ -25,56 +31,102 @@ export default function StaffDashboard() {
     fetchStats();
   }, []);
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: "40px" }}>Loading dashboard...</div>;
+  if (loading) return <Loading text="Preparing today's operational dashboard…" />;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
-      <h2>Staff Operations Dashboard</h2>
-      <p>Welcome back! Here is an overview of today's clinic operations.</p>
+    <div className="pt">
+      {/* Hero Welcome Card */}
+      <section className="ui-card pt-hero" aria-labelledby="welcome-title">
+        <div className="pt-hero__copy">
+          <h2 id="welcome-title">{greeting()}, {firstName(user?.name)}</h2>
+          <p>
+            Welcome to the Reception & Operations Portal. Manage patient triage, monitor live clinic queues, register walk-ins, and process payments.
+          </p>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <Link to="/staff/walkin" className="ui-btn ui-btn--primary">
+              <Icon name="plus" size={18} /> Register Walk-in
+            </Link>
+            <Link to="/staff/queue" className="ui-btn ui-btn--ghost">
+              <Icon name="clock" size={18} /> Live Queue & Triage
+            </Link>
+          </div>
+        </div>
+        <img className="pt-hero__art" src={blob} alt="" aria-hidden="true" />
+      </section>
 
-      {/* Stat Cards Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "15px", margin: "25px 0" }}>
-        <div style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "8px", background: "#f9f9f9" }}>
-          <h4>Today's Appointments</h4>
-          <p style={{ fontWeight: "bold", fontSize: "1.5rem", color: "#007bff", marginTop: "10px" }}>
-            {stats.todayAppointments}
-          </p>
-        </div>
-        <div style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "8px", background: "#f9f9f9" }}>
-          <h4>Active Queue</h4>
-          <p style={{ fontWeight: "bold", fontSize: "1.5rem", color: "#ffc107", marginTop: "10px" }}>
-            {stats.activeQueue}
-          </p>
-        </div>
-        <div style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "8px", background: "#f9f9f9" }}>
-          <h4>Walk-ins Registered</h4>
-          <p style={{ fontWeight: "bold", fontSize: "1.5rem", color: "#17a2b8", marginTop: "10px" }}>
-            {stats.walkInsRegistered}
-          </p>
-        </div>
-        <div style={{ padding: "20px", border: "1px solid #ddd", borderRadius: "8px", background: "#f9f9f9" }}>
-          <h4>Today's Revenue</h4>
-          <p style={{ fontWeight: "bold", fontSize: "1.5rem", color: "#28a745", marginTop: "10px" }}>
-            ₱{stats.todaysRevenue}
-          </p>
-        </div>
+      {/* Operational Metrics Grid */}
+      <div className="pt-stats">
+        <Link to="/staff/appointments" className="ui-card pt-stat">
+          <span className="pt-stat__icon pt-stat__icon--blue">
+            <Icon name="calendar" size={22} />
+          </span>
+          <span className="pt-stat__label">Today's Appointments</span>
+          <span className="pt-stat__value">{stats.todayAppointments}</span>
+          <span className="pt-stat__hint">Scheduled outpatient visits</span>
+        </Link>
+
+        <Link to="/staff/queue" className="ui-card pt-stat">
+          <span className="pt-stat__icon pt-stat__icon--amber">
+            <Icon name="clock" size={22} />
+          </span>
+          <span className="pt-stat__label">Active Clinic Queue</span>
+          <span className="pt-stat__value">{stats.activeQueue}</span>
+          <span className="pt-stat__hint">Patients waiting for doctor</span>
+        </Link>
+
+        <Link to="/staff/walkin" className="ui-card pt-stat">
+          <span className="pt-stat__icon pt-stat__icon--blue">
+            <Icon name="user" size={22} />
+          </span>
+          <span className="pt-stat__label">Walk-ins Registered</span>
+          <span className="pt-stat__value">{stats.walkInsRegistered}</span>
+          <span className="pt-stat__hint">Registered at reception today</span>
+        </Link>
+
+        <Link to="/staff/billing" className="ui-card pt-stat">
+          <span className="pt-stat__icon pt-stat__icon--green">
+            <Icon name="receipt" size={22} />
+          </span>
+          <span className="pt-stat__label">Today's Revenue</span>
+          <span className="pt-stat__value">{peso(stats.todaysRevenue)}</span>
+          <span className="pt-stat__hint">Payments collected today</span>
+        </Link>
       </div>
 
-      {/* Quick Actions */}
-      <div style={{ marginTop: "35px" }}>
-        <h3>Quick Actions</h3>
-        <div style={{ marginTop: "15px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <Link to="/staff/walk-in">
-            <button style={{ padding: "10px 15px", cursor: "pointer" }}>Register Walk-in Patient</button>
+      {/* Quick Action Shortcuts */}
+      <div>
+        <h2 className="pt-section-title">Reception Quick Actions</h2>
+        <div className="pt-stats">
+          <Link to="/staff/walkin" className="ui-card pt-stat">
+            <span className="pt-stat__icon pt-stat__icon--blue">
+              <Icon name="plus" size={22} />
+            </span>
+            <span className="pt-stat__value" style={{ fontSize: "1.05rem" }}>Register Walk-in Patient</span>
+            <span className="pt-stat__hint">Quickly register non-scheduled patient visits and queue them</span>
           </Link>
-          <Link to="/staff/queue">
-            <button style={{ padding: "10px 15px", cursor: "pointer" }}>Manage Live Queue & Triage</button>
+
+          <Link to="/staff/queue" className="ui-card pt-stat">
+            <span className="pt-stat__icon pt-stat__icon--amber">
+              <Icon name="clock" size={22} />
+            </span>
+            <span className="pt-stat__value" style={{ fontSize: "1.05rem" }}>Live Queue & Triage</span>
+            <span className="pt-stat__hint">Record vitals (BP, Temp) and send patients to available doctors</span>
           </Link>
-          <Link to="/staff/appointments">
-            <button style={{ padding: "10px 15px", cursor: "pointer" }}>View Appointments</button>
+
+          <Link to="/staff/patients" className="ui-card pt-stat">
+            <span className="pt-stat__icon pt-stat__icon--green">
+              <Icon name="users" size={22} />
+            </span>
+            <span className="pt-stat__value" style={{ fontSize: "1.05rem" }}>Patient Directory</span>
+            <span className="pt-stat__hint">Search patient records by name, email, or contact number</span>
           </Link>
-          <Link to="/staff/billing">
-            <button style={{ padding: "10px 15px", cursor: "pointer" }}>Process Billing / Payments</button>
+
+          <Link to="/staff/billing" className="ui-card pt-stat">
+            <span className="pt-stat__icon pt-stat__icon--green">
+              <Icon name="receipt" size={22} />
+            </span>
+            <span className="pt-stat__value" style={{ fontSize: "1.05rem" }}>Billing & Payments</span>
+            <span className="pt-stat__hint">Review pending invoices and settle patient consultation bills</span>
           </Link>
         </div>
       </div>

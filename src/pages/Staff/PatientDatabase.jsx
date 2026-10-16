@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
+import Badge from "../../components/ui/Badge";
+import EmptyState from "../../components/ui/EmptyState";
+import Icon from "../../components/ui/Icon";
+import Loading from "../../components/ui/Loading";
+import { formatDate } from "../../utils/format";
 
 export default function PatientDatabase() {
   const [patients, setPatients] = useState([]);
@@ -22,61 +27,86 @@ export default function PatientDatabase() {
     fetchPatients();
   }, []);
 
-  const filteredPatients = patients.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.phone && p.phone.includes(searchTerm))
+  const filteredPatients = patients.filter(
+    (p) =>
+      p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.phone && p.phone.includes(searchTerm))
   );
 
-  if (loading) return <div>Loading patient database...</div>;
+  if (loading) return <Loading text="Loading patient database…" />;
 
   return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "20px", minHeight: "80vh" }}>
-      <div style={{ width: "100%", maxWidth: "500px" }}>
-      <h2>Patient Directory & Database</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+    <div className="pt">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+        <p className="pt-lead" style={{ margin: 0 }}>Search registered patient accounts and view personal contact profiles.</p>
 
-      <div>
-        <input
-          type="text"
-          placeholder="Search by name, email, or phone number..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+        <div style={{ position: "relative", minWidth: "18rem" }}>
+          <input
+            type="text"
+            placeholder="Search by name, email, or phone…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "0.55rem 1rem 0.55rem 2.2rem",
+              borderRadius: "var(--radius-pill)",
+              border: "1px solid var(--gh-line)",
+              fontSize: "0.9rem"
+            }}
+          />
+          <span style={{ position: "absolute", left: "0.8rem", top: "50%", transform: "translateY(-50%)", color: "var(--gh-muted)" }}>
+            <Icon name="search" size={16} />
+          </span>
+        </div>
+      </div>
+
+      {error && <p className="ui-alert ui-alert--error" role="alert">{error}</p>}
+
+      {filteredPatients.length === 0 ? (
+        <EmptyState
+          icon="users"
+          title="No patients found"
+          text={searchTerm ? `No patient matching "${searchTerm}" was found.` : "No patients recorded in database."}
         />
-      </div>
-
-      <br />
-
-      <table border="1" cellPadding="5" cellSpacing="0">
-        <thead>
-          <tr>
-            <th>Patient Name</th>
-            <th>Email</th>
-            <th>Phone Number</th>
-            <th>Gender / Age</th>
-            <th>Registration Type</th>
-            <th>Registered Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredPatients.map((p) => (
-            <tr key={p._id}>
-              <td>{p.name}</td>
-              <td>{p.email}</td>
-              <td>{p.phone || "N/A"}</td>
-              <td>{p.gender || "N/A"} / {p.age || "N/A"}</td>
-              <td>{p.isWalkIn ? "Walk-in" : "Online Registration"}</td>
-              <td>{new Date(p.createdAt).toLocaleDateString()}</td>
-            </tr>
-          ))}
-          {filteredPatients.length === 0 && (
-            <tr>
-              <td colSpan="6">No patients found.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      </div>
+      ) : (
+        <div className="ui-table-card">
+          <div className="ui-table-wrap">
+            <table className="ui-table">
+              <thead>
+                <tr>
+                  <th style={{ width: "22%" }}>Patient Name</th>
+                  <th style={{ width: "26%" }}>Email Address</th>
+                  <th style={{ width: "16%" }}>Phone Number</th>
+                  <th style={{ width: "14%" }}>Gender / Age</th>
+                  <th style={{ width: "10%" }}>Registration Type</th>
+                  <th style={{ width: "12%", textAlign: "right" }}>Registered Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPatients.map((p) => (
+                  <tr key={p._id}>
+                    <td style={{ fontWeight: "600", whiteSpace: "nowrap" }}>{p.name}</td>
+                    <td style={{ color: "var(--gh-muted)", wordBreak: "break-all", maxWidth: "220px" }}>
+                      {p.email}
+                    </td>
+                    <td style={{ color: "var(--gh-muted)", whiteSpace: "nowrap" }}>{p.phone || "N/A"}</td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      {p.gender || "N/A"} / {p.age ? `${p.age} yrs` : "N/A"}
+                    </td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <Badge status={p.isWalkIn ? "Walk-in" : "Scheduled"} />
+                    </td>
+                    <td style={{ textAlign: "right", color: "var(--gh-muted)", whiteSpace: "nowrap" }}>
+                      {p.createdAt ? formatDate(p.createdAt) : "N/A"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

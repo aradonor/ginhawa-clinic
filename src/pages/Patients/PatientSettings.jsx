@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
+import Loading from "../../components/ui/Loading";
+import Icon from "../../components/ui/Icon";
+import { initials } from "../../utils/format";
 
 export default function PatientSettings() {
   const { user } = useAuth();
@@ -69,85 +72,69 @@ export default function PatientSettings() {
     }
   };
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: "40px" }}>Loading settings...</div>;
+  if (loading) return <Loading text="Loading your settings…" />;
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", padding: "20px", minHeight: "80vh" }}>
-      <div style={{ width: "100%", maxWidth: "500px" }}>
-        <h2>Patient Account Settings</h2>
-        
-        {/* Profile Section */}
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {success && <p style={{ color: "green" }}>{success}</p>}
+    <div className="pt">
+      <p className="pt-lead">Keep your details up to date and your account secure.</p>
 
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label>Full Name:</label><br />
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-            />
+      <div className="pt-settings">
+        <section className="ui-card" aria-labelledby="profile-title">
+          <div className="pt-profile">
+            <span className="pt-profile__avatar" aria-hidden="true">{initials(formData.name)}</span>
+            <div>
+              <h2 id="profile-title">Profile</h2>
+              <p>Your contact details</p>
+            </div>
           </div>
-          <div>
-            <label>Email Address:</label><br />
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              disabled
-              style={{ width: "100%", padding: "8px", marginBottom: "5px", backgroundColor: "#f0f0f0" }}
-            />
-            <small style={{ color: "#666" }}>(Email cannot be changed)</small>
-          </div>
-          <div style={{ marginTop: "10px" }}>
-            <label>Phone Number:</label><br />
-            <input
-              type="text"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-            />
-          </div>
-          <button type="submit" style={{ padding: "10px 15px" }}>Save Profile</button>
-        </form>
 
-        <hr style={{ margin: "40px 0" }} />
+          {error && <p className="ui-alert ui-alert--error" role="alert" style={{ marginBottom: "1rem" }}>{error}</p>}
+          {success && <p className="ui-alert ui-alert--success" role="status" style={{ marginBottom: "1rem" }}>{success}</p>}
 
-        {/* Password Section */}
-        <h3>Change Password</h3>
-        {passError && <p style={{ color: "red" }}>{passError}</p>}
-        {passSuccess && <p style={{ color: "green" }}>{passSuccess}</p>}
+          <form className="ui-stack" onSubmit={handleSubmit}>
+            <div className="ui-field">
+              <label htmlFor="name">Full name</label>
+              <input id="name" type="text" name="name" value={formData.name} onChange={handleChange} required />
+            </div>
+            <div className="ui-field">
+              <label htmlFor="email">Email address</label>
+              <input id="email" type="email" name="email" value={formData.email} disabled />
+              <small>Your email cannot be changed.</small>
+            </div>
+            <div className="ui-field">
+              <label htmlFor="phone">Phone number</label>
+              <input id="phone" type="text" name="phone" value={formData.phone} onChange={handleChange} />
+            </div>
+            <div><button type="submit" className="ui-btn ui-btn--primary">Save profile</button></div>
+          </form>
+        </section>
 
-        <form onSubmit={handlePasswordSubmit}>
-          <div>
-            <label>Current Password:</label><br />
-            <input
-              type="password"
-              name="currentPassword"
-              value={passwordData.currentPassword}
-              onChange={handlePasswordChange}
-              required
-              style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-            />
+        <section className="ui-card" aria-labelledby="password-title">
+          <div className="pt-profile">
+            <span className="pt-profile__avatar" aria-hidden="true" style={{ background: "var(--gh-blue-soft)", color: "var(--gh-blue)" }}>
+              <Icon name="lock" />
+            </span>
+            <div>
+              <h2 id="password-title">Change password</h2>
+              <p>Use a password only you know</p>
+            </div>
           </div>
-          <div>
-            <label>New Password:</label><br />
-            <input
-              type="password"
-              name="newPassword"
-              value={passwordData.newPassword}
-              onChange={handlePasswordChange}
-              required
-              style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-            />
-          </div>
-          <button type="submit" style={{ padding: "10px 15px" }}>Update Password</button>
-        </form>
+
+          {passError && <p className="ui-alert ui-alert--error" role="alert" style={{ marginBottom: "1rem" }}>{passError}</p>}
+          {passSuccess && <p className="ui-alert ui-alert--success" role="status" style={{ marginBottom: "1rem" }}>{passSuccess}</p>}
+
+          <form className="ui-stack" onSubmit={handlePasswordSubmit}>
+            <div className="ui-field">
+              <label htmlFor="currentPassword">Current password</label>
+              <input id="currentPassword" type="password" name="currentPassword" value={passwordData.currentPassword} onChange={handlePasswordChange} required autoComplete="current-password" />
+            </div>
+            <div className="ui-field">
+              <label htmlFor="newPassword">New password</label>
+              <input id="newPassword" type="password" name="newPassword" value={passwordData.newPassword} onChange={handlePasswordChange} required autoComplete="new-password" />
+            </div>
+            <div><button type="submit" className="ui-btn ui-btn--primary">Update password</button></div>
+          </form>
+        </section>
       </div>
     </div>
   );

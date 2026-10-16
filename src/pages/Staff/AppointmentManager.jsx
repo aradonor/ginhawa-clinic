@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
+import Badge from "../../components/ui/Badge";
+import EmptyState from "../../components/ui/EmptyState";
+import Loading from "../../components/ui/Loading";
+import { formatDate, formatTime } from "../../utils/format";
 
 export default function AppointmentManager() {
   const [appointments, setAppointments] = useState([]);
@@ -35,80 +39,122 @@ export default function AppointmentManager() {
     ? appointments
     : appointments.filter((app) => app.status === filterStatus);
 
-  if (loading) return <div>Loading appointments...</div>;
+  if (loading) return <Loading text="Loading appointment records…" />;
+
+  const formatDoctorName = (doc) => {
+    const raw = doc?.name || doc || "Unassigned";
+    if (raw === "Unassigned") return "Unassigned";
+    return raw.startsWith("Dr.") ? raw : `Dr. ${raw}`;
+  };
 
   return (
-     <div style={{ display: "flex", justifyContent: "center", padding: "20px", minHeight: "80vh" }}>
-      <div style={{ width: "100%", maxWidth: "500px" }}>
-      <h2>Appointment Manager</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <div>
-        <label>Filter by Status: </label>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="All">All Appointments</option>
-          <option value="Pending">Pending</option>
-          <option value="Confirmed">Confirmed</option>
-          <option value="Cancelled">Cancelled</option>
-          <option value="Completed">Completed</option>
-        </select>
+    <div className="pt">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+        <p className="pt-lead" style={{ margin: 0 }}>Review, confirm, or mark completed all online and walk-in appointments.</p>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <label htmlFor="filterStatus" style={{ fontSize: "0.88rem", fontWeight: "600", color: "var(--gh-muted)", whiteSpace: "nowrap" }}>
+            Filter Status:
+          </label>
+          <select
+            id="filterStatus"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            style={{
+              padding: "0.45rem 0.9rem",
+              borderRadius: "var(--radius-pill)",
+              border: "1px solid var(--gh-line)",
+              fontSize: "0.88rem",
+              background: "#fff"
+            }}
+          >
+            <option value="All">All Appointments</option>
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
       </div>
 
-      <br />
+      {error && <p className="ui-alert ui-alert--error" role="alert">{error}</p>}
 
-      <table border="1" cellPadding="5" cellSpacing="0">
-        <thead>
-          <tr>
-            <th>Date & Time</th>
-            <th>Patient Name</th>
-            <th>Doctor</th>
-            <th>Reason / Notes</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredAppointments.map((app) => (
-            <tr key={app._id}>
-              <td>
-                {new Date(app.date).toLocaleDateString()} <br />
-                <small>{app.time || new Date(app.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
-              </td>
-              <td>{app.patient?.name || "N/A"}</td>
-              <td>Dr. {app.doctor?.name || "Unassigned"}</td>
-              <td>{app.reason || "General Checkup"}</td>
-              <td>{app.status}</td>
-              <td>
-                {app.status === "Pending" && (
-                  <>
-                    <button onClick={() => handleStatusChange(app._id, "Confirmed")}>
-                      Confirm
-                    </button>
-                    {" "}
-                    <button onClick={() => handleStatusChange(app._id, "Cancelled")}>
-                      Cancel
-                    </button>
-                  </>
-                )}
-                {app.status === "Confirmed" && (
-                  <button onClick={() => handleStatusChange(app._id, "Completed")}>
-                    Mark Completed
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-          {filteredAppointments.length === 0 && (
-            <tr>
-              <td colSpan="6">No appointments found.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      </div>
+      {filteredAppointments.length === 0 ? (
+        <EmptyState
+          icon="calendar"
+          title="No appointments found"
+          text={filterStatus === "All" ? "No appointments are currently scheduled." : `No appointments with status "${filterStatus}".`}
+        />
+      ) : (
+        <div className="ui-table-card">
+          <div className="ui-table-wrap">
+            <table className="ui-table">
+              <thead>
+                <tr>
+                  <th style={{ width: "18%" }}>Date & Time</th>
+                  <th style={{ width: "20%" }}>Patient Name</th>
+                  <th style={{ width: "18%" }}>Attending Doctor</th>
+                  <th style={{ width: "22%" }}>Reason / Notes</th>
+                  <th style={{ width: "10%" }}>Status</th>
+                  <th style={{ width: "12%", textAlign: "right" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAppointments.map((app) => (
+                  <tr key={app._id}>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <div style={{ fontWeight: "600" }}>{formatDate(app.date)}</div>
+                      <div style={{ fontSize: "0.82rem", color: "var(--gh-muted)" }}>
+                        {app.time ? formatTime(app.time) : "TBD"}
+                      </div>
+                    </td>
+                    <td style={{ fontWeight: "600", whiteSpace: "nowrap" }}>
+                      {app.patient?.name || app.patientName || "Walk-in Patient"}
+                    </td>
+                    <td style={{ color: "var(--gh-muted)", whiteSpace: "nowrap" }}>
+                      {formatDoctorName(app.doctor)}
+                    </td>
+                    <td style={{ color: "var(--gh-muted)", maxWidth: "220px", wordWrap: "break-word" }}>
+                      {app.reason || "General Checkup"}
+                    </td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <Badge status={app.status || "Pending"} />
+                    </td>
+                    <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                      <div style={{ display: "inline-flex", gap: "0.4rem", justifyContent: "flex-end" }}>
+                        {app.status === "Pending" && (
+                          <>
+                            <button
+                              onClick={() => handleStatusChange(app._id, "Confirmed")}
+                              className="ui-btn ui-btn--primary ui-btn--sm"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(app._id, "Cancelled")}
+                              className="ui-btn ui-btn--danger ui-btn--sm"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                        {app.status === "Confirmed" && (
+                          <button
+                            onClick={() => handleStatusChange(app._id, "Completed")}
+                            className="ui-btn ui-btn--ghost ui-btn--sm"
+                          >
+                            Mark Completed
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

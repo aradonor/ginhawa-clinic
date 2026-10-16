@@ -1,33 +1,16 @@
 import React from "react";
-import { Link, Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import DashboardShell from "./DashboardShell";
+
+const LINKS = [
+  { to: "/staff/dashboard", label: "Dashboard", icon: "home" },
+  { to: "/staff/appointments", label: "Appointment Manager", icon: "calendar" },
+  { to: "/staff/walkin", label: "Walk-ins & Registration", icon: "userPlus" },
+  { to: "/staff/queue", label: "Live Queue & Triage", icon: "clock" },
+  { to: "/staff/patients", label: "Patient Database", icon: "users" },
+  { to: "/staff/billing", label: "Billing & Payments", icon: "receipt" },
+  { to: "/staff/settings", label: "Settings", icon: "settings" },
+];
 
 export default function StaffLayout() {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  return (
-    <div>
-      <nav>
-        <h2>Ginhawa Staff & Reception Portal</h2>
-        <div>
-        <Link to="/staff/dashboard" style={{ marginRight: "15px" }}>Dashboard</Link>
-        <Link to="/staff/appointments" style={{ marginRight: "15px" }}>Appointment Manager</Link>
-        <Link to="/staff/walkin" style={{ marginRight: "15px" }}>Walk-ins & Registration</Link>
-        <Link to="/staff/queue" style={{ marginRight: "15px" }}>Live Queue & Triage</Link>
-        <Link to="/staff/patients" style={{ marginRight: "15px" }}>Patient Database</Link>
-        <Link to="/staff/billing" style={{ marginRight: "15px" }}>Billing & Payments</Link> 
-        <Link to="/staff/settings" style={{ marginRight: "15px" }}>Settings</Link>
-          <button onClick={handleLogout}style={{ marginLeft: "20px" }}>Logout</button>
-        </div>
-        <hr/>
-      </nav>
-        <Outlet />
-    </div>
-  );
+  return <DashboardShell role="staff" portalName="Staff & Reception Portal" links={LINKS} />;
 }

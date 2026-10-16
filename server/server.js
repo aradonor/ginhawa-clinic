@@ -10,6 +10,7 @@ const appointmentRoutes = require("./routes/appointmentRoutes");
 const staffRoutes = require("./routes/staffRoutes")
 const adminRoutes = require("./routes/adminRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
+const contactRoutes = require("./routes/contactRoutes");
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/staff", staffRoutes);  
 app.use("/api/admin", adminRoutes); 
 app.use("/api/inventory", inventoryRoutes); 
+app.use("/api/contact", contactRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;

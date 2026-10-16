@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
+import Loading from "../../components/ui/Loading";
+import Icon from "../../components/ui/Icon";
+import { initials } from "../../utils/format";
 
 export default function DoctorSettings() {
   const [formData, setFormData] = useState({
@@ -8,7 +11,7 @@ export default function DoctorSettings() {
     specialization: "",
     clinicHours: "",
   });
-  
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -31,7 +34,7 @@ export default function DoctorSettings() {
           clinicHours: res.data.clinicHours || "",
         });
       } catch (err) {
-        setError("Failed to load profile settings");
+        setError("Failed to load profile details");
       } finally {
         setLoading(false);
       }
@@ -54,9 +57,9 @@ export default function DoctorSettings() {
 
     try {
       await API.put("/doctor/profile", formData);
-      setSuccess("Profile settings updated successfully!");
+      setSuccess("Profile settings saved successfully.");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update settings");
+      setError(err.response?.data?.message || "Failed to update profile");
     }
   };
 
@@ -67,103 +70,130 @@ export default function DoctorSettings() {
 
     try {
       const res = await API.put("/doctor/change-password", passwordData);
-      setPassSuccess(res.data.message);
+      setPassSuccess(res.data.message || "Password updated successfully!");
       setPasswordData({ currentPassword: "", newPassword: "" });
     } catch (err) {
       setPassError(err.response?.data?.message || "Failed to update password");
     }
   };
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: "40px" }}>Loading settings...</div>;
+  if (loading) return <Loading text="Loading doctor account settings…" />;
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", padding: "20px", minHeight: "80vh" }}>
-      <div style={{ width: "100%", maxWidth: "500px" }}>
-        <h2>Doctor Settings & Profile</h2>
-        
-        {/* Profile Section */}
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {success && <p style={{ color: "green" }}>{success}</p>}
+    <div className="pt">
+      <p className="pt-lead">Manage your professional account profile, clinic schedule hours, and portal password.</p>
 
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label>Full Name:</label><br />
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-            />
+      <div className="pt-settings">
+        {/* Profile Card */}
+        <div className="ui-card">
+          <div className="pt-profile">
+            <div className="pt-profile__avatar">
+              {initials(formData.name || "Doctor")}
+            </div>
+            <div>
+              <h2>Dr. {formData.name || "Doctor Profile"}</h2>
+              <p>{formData.specialization || "General Practitioner"}</p>
+            </div>
           </div>
-          <div>
-            <label>Email Address:</label><br />
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-            />
-          </div>
-          <div>
-            <label>Specialization:</label><br />
-            <input
-              type="text"
-              name="specialization"
-              value={formData.specialization}
-              onChange={handleChange}
-              style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-            />
-          </div>
-          <div>
-            <label>Clinic Hours:</label><br />
-            <input
-              type="text"
-              name="clinicHours"
-              value={formData.clinicHours}
-              onChange={handleChange}
-              placeholder="e.g. Mon-Fri: 9AM - 5PM"
-              style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-            />
-          </div>
-          <button type="submit" style={{ padding: "10px 15px" }}>Save Profile</button>
-        </form>
 
-        <hr style={{ margin: "40px 0" }} />
+          <form className="ui-stack" onSubmit={handleSubmit}>
+            {error && <p className="ui-alert ui-alert--error" role="alert">{error}</p>}
+            {success && <p className="ui-alert ui-alert--success" role="status">{success}</p>}
 
-        {/* Password Section */}
-        <h3>Change Password</h3>
-        {passError && <p style={{ color: "red" }}>{passError}</p>}
-        {passSuccess && <p style={{ color: "green" }}>{passSuccess}</p>}
+            <div className="ui-field">
+              <label htmlFor="name">Full Name</label>
+              <input
+                id="name"
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-        <form onSubmit={handlePasswordSubmit}>
-          <div>
-            <label>Current Password:</label><br />
-            <input
-              type="password"
-              name="currentPassword"
-              value={passwordData.currentPassword}
-              onChange={handlePasswordChange}
-              required
-              style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-            />
-          </div>
-          <div>
-            <label>New Password:</label><br />
-            <input
-              type="password"
-              name="newPassword"
-              value={passwordData.newPassword}
-              onChange={handlePasswordChange}
-              required
-              style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-            />
-          </div>
-          <button type="submit" style={{ padding: "10px 15px" }}>Update Password</button>
-        </form>
+            <div className="ui-field">
+              <label htmlFor="email">Email Address</label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="ui-field">
+              <label htmlFor="specialization">Medical Specialization</label>
+              <input
+                id="specialization"
+                type="text"
+                name="specialization"
+                value={formData.specialization}
+                onChange={handleChange}
+                placeholder="e.g. Internal Medicine, Pediatrics"
+              />
+            </div>
+
+            <div className="ui-field">
+              <label htmlFor="clinicHours">Clinic / Consultation Hours</label>
+              <input
+                id="clinicHours"
+                type="text"
+                name="clinicHours"
+                value={formData.clinicHours}
+                onChange={handleChange}
+                placeholder="e.g. Mon - Fri: 9:00 AM - 5:00 PM"
+              />
+            </div>
+
+            <button type="submit" className="ui-btn ui-btn--primary">
+              <Icon name="check" size={16} /> Save Profile Changes
+            </button>
+          </form>
+        </div>
+
+        {/* Change Password Card */}
+        <div className="ui-card">
+          <h2 className="pt-section-title">Change Portal Password</h2>
+          <p className="pt-lead" style={{ fontSize: "0.88rem", marginBottom: "1rem" }}>
+            Ensure your account is using a strong password.
+          </p>
+
+          <form className="ui-stack" onSubmit={handlePasswordSubmit}>
+            {passError && <p className="ui-alert ui-alert--error" role="alert">{passError}</p>}
+            {passSuccess && <p className="ui-alert ui-alert--success" role="status">{passSuccess}</p>}
+
+            <div className="ui-field">
+              <label htmlFor="currentPassword">Current Password</label>
+              <input
+                id="currentPassword"
+                type="password"
+                name="currentPassword"
+                value={passwordData.currentPassword}
+                onChange={handlePasswordChange}
+                required
+              />
+            </div>
+
+            <div className="ui-field">
+              <label htmlFor="newPassword">New Password</label>
+              <input
+                id="newPassword"
+                type="password"
+                name="newPassword"
+                value={passwordData.newPassword}
+                onChange={handlePasswordChange}
+                required
+              />
+            </div>
+
+            <button type="submit" className="ui-btn ui-btn--ghost">
+              <Icon name="lock" size={16} /> Update Password
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

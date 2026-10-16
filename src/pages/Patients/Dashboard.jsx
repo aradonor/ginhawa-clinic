@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../../api/axios";
+import { useAuth } from "../../context/AuthContext";
+import Icon from "../../components/ui/Icon";
+import Loading from "../../components/ui/Loading";
+import blob from "../../assets/hero-blob.webp";
+import { peso, formatDate, formatTime, greeting, firstName } from "../../utils/format";
 
 export default function PatientDashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     upcomingAppointment: null,
     activePrescriptionsCount: 0,
@@ -21,18 +27,18 @@ export default function PatientDashboard() {
         ]);
 
         // Find next upcoming appointment
-        const upcoming = appRes.data.find(app => app.status === "Pending" || app.status === "Scheduled");
+        const upcoming = appRes.data.find((app) => app.status === "Pending" || app.status === "Scheduled");
 
         // Count active prescriptions
-        const activePresc = prescRes.data.filter(p => p.status === "Active").length;
+        const activePresc = prescRes.data.filter((p) => p.status === "Active").length;
 
         // Calculate total unpaid bills
         const unpaidTotal = billRes.data
-          .filter(b => (b.status || b.paymentStatus) === "Unpaid")
+          .filter((b) => (b.status || b.paymentStatus) === "Unpaid")
           .reduce((sum, b) => sum + (b.totalAmount || b.amount || 0), 0);
 
         setStats({
-          upcomingAppointment: upcoming ? `${upcoming.date} at ${upcoming.time}` : "None scheduled",
+          upcomingAppointment: upcoming || null,
           activePrescriptionsCount: activePresc,
           unpaidBalance: unpaidTotal,
         });
@@ -46,36 +52,47 @@ export default function PatientDashboard() {
     fetchDashboardData();
   }, []);
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: "40px" }}>Loading dashboard...</div>;
+  if (loading) return <Loading text="Getting your summary ready…" />;
+
+  const next = stats.upcomingAppointment;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
-      <h2>Patient Dashboard</h2>
-      <p>Welcome back! Here is a summary of your recent clinic activity.</p>
+    <div className="pt">
+      <section className="ui-card pt-hero" aria-labelledby="welcome-title">
+        <div className="pt-hero__copy">
+          <h2 id="welcome-title">{greeting()}, {firstName(user?.name)}</h2>
+          <p>Here is a quick look at your care. Book a visit, check your prescriptions, or review your bills whenever you need.</p>
+          <Link to="/patient/book-appointment" className="ui-btn ui-btn--primary">
+            <Icon name="plus" size={18} /> Book an appointment
+          </Link>
+        </div>
+        <img className="pt-hero__art" src={blob} alt="" aria-hidden="true" />
+      </section>
 
-      {/* Stat Cards Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "15px", margin: "20px 0" }}>
-        <div style={{ padding: "15px", border: "1px solid #ddd", borderRadius: "8px", background: "#f9f9f9" }}>
-          <h4>Next Appointment</h4>
-          <p style={{ fontWeight: "bold", color: "#333" }}>{stats.upcomingAppointment}</p>
-        </div>
-        <div style={{ padding: "15px", border: "1px solid #ddd", borderRadius: "8px", background: "#f9f9f9" }}>
-          <h4>Active Prescriptions</h4>
-          <p style={{ fontWeight: "bold", fontSize: "1.2rem", color: "#007bff" }}>{stats.activePrescriptionsCount}</p>
-        </div>
-        <div style={{ padding: "15px", border: "1px solid #ddd", borderRadius: "8px", background: "#f9f9f9" }}>
-          <h4>Unpaid Balance</h4>
-          <p style={{ fontWeight: "bold", fontSize: "1.2rem", color: "#dc3545" }}>₱{stats.unpaidBalance}</p>
-        </div>
-      </div>
-
-      {/* Quick Action Links */}
-      <div style={{ marginTop: "30px", display: "flex", gap: "10px" }}>
-        <Link to="/patient/book-appointment">
-          <button style={{ padding: "10px 15px", cursor: "pointer" }}>Book New Appointment</button>
+      <div className="pt-stats">
+        <Link to="/patient/appointments" className="ui-card pt-stat">
+          <span className="pt-stat__icon pt-stat__icon--blue"><Icon name="calendar" /></span>
+          <span className="pt-stat__label">Next appointment</span>
+          <span className="pt-stat__value">{next ? formatDate(next.date) : "None scheduled"}</span>
+          <span className="pt-stat__hint">
+            {next
+              ? `${formatTime(next.time)}${next.doctorName ? ` with ${next.doctorName}` : ""}`
+              : "Book a visit when you are ready"}
+          </span>
         </Link>
-        <Link to="/patient/billing">
-          <button style={{ padding: "10px 15px", cursor: "pointer" }}>View Billing Details</button>
+
+        <Link to="/patient/prescriptions" className="ui-card pt-stat">
+          <span className="pt-stat__icon pt-stat__icon--green"><Icon name="pill" /></span>
+          <span className="pt-stat__label">Active prescriptions</span>
+          <span className="pt-stat__value">{stats.activePrescriptionsCount}</span>
+          <span className="pt-stat__hint">View your medicines</span>
+        </Link>
+
+        <Link to="/patient/billing" className="ui-card pt-stat">
+          <span className="pt-stat__icon pt-stat__icon--red"><Icon name="receipt" /></span>
+          <span className="pt-stat__label">Unpaid balance</span>
+          <span className="pt-stat__value">{peso(stats.unpaidBalance)}</span>
+          <span className="pt-stat__hint">{stats.unpaidBalance > 0 ? "View billing details" : "You are all settled"}</span>
         </Link>
       </div>
     </div>

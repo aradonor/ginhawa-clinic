@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
+import Badge from "../../components/ui/Badge";
+import EmptyState from "../../components/ui/EmptyState";
+import Icon from "../../components/ui/Icon";
+import Loading from "../../components/ui/Loading";
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Toggles & State for Create vs Edit
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingUser, setEditingUser] = useState(null); // Holds the user being edited
+  const [editingUser, setEditingUser] = useState(null);
 
-  // Form states
   const [createData, setCreateData] = useState({
     name: "",
     email: "",
@@ -39,7 +41,6 @@ export default function UserManagement() {
     fetchUsers();
   }, []);
 
-  // 1. Handle Create Submit
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -52,7 +53,6 @@ export default function UserManagement() {
     }
   };
 
-  // 2. Open Edit Form and populate fields
   const handleEditClick = (user) => {
     setEditingUser(user);
     setEditData({
@@ -60,10 +60,9 @@ export default function UserManagement() {
       email: user.email,
       role: user.role,
     });
-    setShowCreateForm(false); // Close create form if open
+    setShowCreateForm(false);
   };
 
-  // 3. Handle Update Submit
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -75,7 +74,6 @@ export default function UserManagement() {
     }
   };
 
-  // 4. Archive User (Soft-delete)
   const handleArchiveUser = async (userId) => {
     if (!window.confirm("Are you sure you want to archive this user account?")) return;
     try {
@@ -86,103 +84,112 @@ export default function UserManagement() {
     }
   };
 
-  if (loading) return <div>Loading user records...</div>;
+  if (loading) return <Loading text="Loading user directory…" />;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
-      <h2>User & Account Management</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+    <div className="pt">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+        <p className="pt-lead" style={{ margin: 0 }}>Create, update role permissions, or archive system user accounts.</p>
+        <button
+          onClick={() => {
+            setShowCreateForm(!showCreateForm);
+            setEditingUser(null);
+          }}
+          className="ui-btn ui-btn--primary ui-btn--sm"
+        >
+          <Icon name="plus" size={16} /> {showCreateForm ? "Cancel" : "Add New User"}
+        </button>
+      </div>
 
-      <button 
-        onClick={() => { setShowCreateForm(!showCreateForm); setEditingUser(null); }} 
-        style={{ marginBottom: "15px", padding: "8px 15px", cursor: "pointer" }}
-      >
-        {showCreateForm ? "Cancel" : "+ Add New User"}
-      </button>
+      {error && <p className="ui-alert ui-alert--error" role="alert">{error}</p>}
 
-      {/* Create User Form */}
+      {/* Create User Form Card */}
       {showCreateForm && !editingUser && (
-        <form onSubmit={handleCreateSubmit} style={{ background: "#f9f9f9", padding: "15px", marginBottom: "20px", border: "1px solid #ccc" }}>
-          <h3>Create New User</h3>
-          <div style={{ marginBottom: "10px" }}>
-            <label>Name:</label><br />
-            <input 
-              type="text" 
-              value={createData.name} 
-              onChange={(e) => setCreateData({ ...createData, name: e.target.value })} 
-              required 
-              style={{ width: "100%", padding: "6px" }}
-            />
+        <form onSubmit={handleCreateSubmit} className="ui-card ui-stack">
+          <h3 className="pt-section-title" style={{ margin: 0 }}>Register New User Account</h3>
+          
+          <div className="pt-two">
+            <div className="ui-field">
+              <label>Full Name</label>
+              <input
+                type="text"
+                value={createData.name}
+                onChange={(e) => setCreateData({ ...createData, name: e.target.value })}
+                required
+              />
+            </div>
+            <div className="ui-field">
+              <label>Email Address</label>
+              <input
+                type="email"
+                value={createData.email}
+                onChange={(e) => setCreateData({ ...createData, email: e.target.value })}
+                required
+              />
+            </div>
           </div>
-          <div style={{ marginBottom: "10px" }}>
-            <label>Email:</label><br />
-            <input 
-              type="email" 
-              value={createData.email} 
-              onChange={(e) => setCreateData({ ...createData, email: e.target.value })} 
-              required 
-              style={{ width: "100%", padding: "6px" }}
-            />
+
+          <div className="pt-two">
+            <div className="ui-field">
+              <label>Password</label>
+              <input
+                type="password"
+                value={createData.password}
+                onChange={(e) => setCreateData({ ...createData, password: e.target.value })}
+                required
+              />
+            </div>
+            <div className="ui-field">
+              <label>Assign Portal Role</label>
+              <select
+                value={createData.role}
+                onChange={(e) => setCreateData({ ...createData, role: e.target.value })}
+              >
+                <option value="patient">patient</option>
+                <option value="doctor">doctor</option>
+                <option value="staff">staff</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
           </div>
-          <div style={{ marginBottom: "10px" }}>
-            <label>Password:</label><br />
-            <input 
-              type="password" 
-              value={createData.password} 
-              onChange={(e) => setCreateData({ ...createData, password: e.target.value })} 
-              required 
-              style={{ width: "100%", padding: "6px" }}
-            />
-          </div>
-          <div style={{ marginBottom: "10px" }}>
-            <label>Role:</label><br />
-            <select 
-              value={createData.role} 
-              onChange={(e) => setCreateData({ ...createData, role: e.target.value })}
-              style={{ width: "100%", padding: "6px" }}
-            >
-              <option value="patient">patient</option>
-              <option value="doctor">doctor</option>
-              <option value="staff">staff</option>
-              <option value="admin">admin</option>
-            </select>
-          </div>
-          <button type="submit" style={{ padding: "8px 15px", background: "#28a745", color: "white", border: "none", cursor: "pointer" }}>
-            Save User
+
+          <button type="submit" className="ui-btn ui-btn--primary">
+            <Icon name="check" size={16} /> Save User Account
           </button>
         </form>
       )}
 
-      {/* Edit / Update User Form */}
+      {/* Edit User Form Card */}
       {editingUser && (
-        <form onSubmit={handleUpdateSubmit} style={{ background: "#eef9ff", padding: "15px", marginBottom: "20px", border: "1px solid #bce8f1" }}>
-          <h3>Edit User: {editingUser.name}</h3>
-          <div style={{ marginBottom: "10px" }}>
-            <label>Name:</label><br />
-            <input 
-              type="text" 
-              value={editData.name} 
-              onChange={(e) => setEditData({ ...editData, name: e.target.value })} 
-              required 
-              style={{ width: "100%", padding: "6px" }}
-            />
+        <form onSubmit={handleUpdateSubmit} className="ui-card ui-stack" style={{ borderColor: "var(--gh-blue)" }}>
+          <h3 className="pt-section-title" style={{ margin: 0 }}>Edit Account: {editingUser.name}</h3>
+
+          <div className="pt-two">
+            <div className="ui-field">
+              <label>Full Name</label>
+              <input
+                type="text"
+                value={editData.name}
+                onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                required
+              />
+            </div>
+            <div className="ui-field">
+              <label>Email Address</label>
+              <input
+                type="email"
+                value={editData.email}
+                onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                required
+              />
+            </div>
           </div>
-          <div style={{ marginBottom: "10px" }}>
-            <label>Email:</label><br />
-            <input 
-              type="email" 
-              value={editData.email} 
-              onChange={(e) => setEditData({ ...editData, email: e.target.value })} 
-              required 
-              style={{ width: "100%", padding: "6px" }}
-            />
-          </div>
-          <div style={{ marginBottom: "10px" }}>
-            <label>Role:</label><br />
-            <select 
-              value={editData.role} 
+
+          <div className="ui-field">
+            <label>Portal Role</label>
+            <select
+              value={editData.role}
               onChange={(e) => setEditData({ ...editData, role: e.target.value })}
-              style={{ width: "100%", padding: "6px" }}
             >
               <option value="patient">patient</option>
               <option value="doctor">doctor</option>
@@ -190,54 +197,66 @@ export default function UserManagement() {
               <option value="admin">admin</option>
             </select>
           </div>
-          <button type="submit" style={{ padding: "8px 15px", background: "#007bff", color: "white", border: "none", cursor: "pointer", marginRight: "10px" }}>
-            Update User
-          </button>
-          <button type="button" onClick={() => setEditingUser(null)} style={{ padding: "8px 15px", cursor: "pointer" }}>
-            Cancel
-          </button>
+
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <button type="submit" className="ui-btn ui-btn--primary">
+              Update Account
+            </button>
+            <button type="button" onClick={() => setEditingUser(null)} className="ui-btn ui-btn--ghost">
+              Cancel
+            </button>
+          </div>
         </form>
       )}
 
-      {/* Users Table */}
-      <table border="1" cellPadding="8" cellSpacing="0" style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ background: "#f2f2f2" }}>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Current Role</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u._id}>
-              <td>{u.name}</td>
-              <td>{u.email}</td>
-              <td><strong>{u.role}</strong></td>
-              <td>
-                <button 
-                  onClick={() => handleEditClick(u)} 
-                  style={{ marginRight: "8px", color: "blue", cursor: "pointer" }}
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => handleArchiveUser(u._id)} 
-                  style={{ color: "orange", cursor: "pointer" }}
-                >
-                  Archive
-                </button>
-              </td>
-            </tr>
-          ))}
-          {users.length === 0 && (
-            <tr>
-              <td colSpan="4" style={{ textAlign: "center" }}>No active users registered.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      {/* Users List Table */}
+      {users.length === 0 ? (
+        <EmptyState
+          icon="users"
+          title="No users found"
+          text="No active user accounts were found in the system database."
+        />
+      ) : (
+        <div className="ui-card" style={{ padding: 0, overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.92rem" }}>
+            <thead>
+              <tr style={{ background: "var(--gh-soft)", borderBottom: "1px solid var(--gh-border)", textAlign: "left" }}>
+                <th style={{ padding: "0.9rem 1.25rem", fontWeight: "600" }}>Name</th>
+                <th style={{ padding: "0.9rem 1.25rem", fontWeight: "600" }}>Email</th>
+                <th style={{ padding: "0.9rem 1.25rem", fontWeight: "600" }}>Role</th>
+                <th style={{ padding: "0.9rem 1.25rem", fontWeight: "600", textAlign: "right" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u._id} style={{ borderBottom: "1px solid var(--gh-border)" }}>
+                  <td style={{ padding: "0.9rem 1.25rem", fontWeight: "600" }}>{u.name}</td>
+                  <td style={{ padding: "0.9rem 1.25rem", color: "var(--gh-muted)" }}>{u.email}</td>
+                  <td style={{ padding: "0.9rem 1.25rem" }}>
+                    <Badge status={u.role || "patient"} />
+                  </td>
+                  <td style={{ padding: "0.9rem 1.25rem", textAlign: "right" }}>
+                    <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                      <button
+                        onClick={() => handleEditClick(u)}
+                        className="ui-btn ui-btn--ghost ui-btn--sm"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleArchiveUser(u._id)}
+                        className="ui-btn ui-btn--danger ui-btn--sm"
+                      >
+                        Archive
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

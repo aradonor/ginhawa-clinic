@@ -1,73 +1,77 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import FormField from "../../components/public/FormField";
+import { validate, required, isEmail } from "../../utils/validators";
+
+const ROLE_HOME = {
+  patient: "/patient/dashboard",
+  doctor: "/doctor/dashboard",
+  staff: "/staff/dashboard",
+  admin: "/admin/dashboard",
+};
+
+const RULES = {
+  email: [required("Email address"), (v) => (isEmail(v) ? "" : "Enter a valid email address.")],
+  password: [required("Password")],
+};
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [values, setValues] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({});
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setValues((v) => ({ ...v, [name]: value }));
+    if (errors[name]) setErrors((er) => ({ ...er, [name]: "" }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    const found = validate(values, RULES);
+    setErrors(found);
+    if (Object.keys(found).length) return;
 
-try {
-        const user = await login(email, password);
-        console.log("Logged in user object:", user); // Check what prints here
-
-        if (user.role === "patient") {
-          navigate("/patient/dashboard");
-        } else if (user.role === "doctor") {
-          navigate("/doctor/dashboard");
-        } else if (user.role === "staff") {
-          navigate("/staff/dashboard");
-        } else if (user.role === "admin") {
-          console.log("Attempting navigation to /admin/dashboard...");
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/");
-        }
+    setSubmitting(true);
+    try {
+      const user = await login(values.email.trim(), values.password);
+      navigate(ROLE_HOME[user.role] || "/");
     } catch (err) {
-        console.error("Login navigation error:", err); // Check if it catches an error here
-        setError(
-          err.response?.data?.message || err.response?.data?.error || "Invalid email or password"
-        );
+      setError(
+        err.response?.data?.message || err.response?.data?.error || "Invalid email or password"
+      );
+    } finally {
+      setSubmitting(false);
     }
-    };
+  };
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
-      <div>
-        <h2>Ginhawa CMS - Login</h2>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label>Email Address:</label><br />
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label>Password:</label><br />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <br />
-          <button type="submit">Login</button>
-        </form>
-        <p>
-          Don't have an account? <Link to="/register">Register here</Link>
-        </p>
-      </div>
+    <div className="pub-page auth">
+      <h1 className="auth__title display">Login</h1>
+      <p className="auth__sub">Login to access Ginhawa account</p>
+
+      <form className="auth__form" onSubmit={handleSubmit} noValidate>
+        {error && <p className="form-alert form-alert--error" role="alert">{error}</p>}
+
+        <div className="form-grid">
+          <FormField label="Email Address" name="email" type="email" autoComplete="email"
+            className="span-2" value={values.email} onChange={onChange} error={errors.email} />
+          <FormField label="Password" name="password" type="password" autoComplete="current-password"
+            className="span-2" value={values.password} onChange={onChange} error={errors.password} />
+        </div>
+
+        <div className="auth__row">
+          <button className="btn-pill" type="submit" disabled={submitting}>
+            {submitting ? "Logging in…" : "Login"}
+          </button>
+          <Link className="auth__link" to="/contact">I forgot my password</Link>
+        </div>
+      </form>
     </div>
   );
 }

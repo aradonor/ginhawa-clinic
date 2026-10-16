@@ -1,6 +1,11 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import PublicLayout from "./components/public/PublicLayout";
+import Home from "./pages/Public/Home";
+import About from "./pages/Public/About";
+import Features from "./pages/Public/Features";
+import Contact from "./pages/Public/Contact";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 
@@ -42,8 +47,14 @@ export default function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Route>
 
           <Route path="/patient" element={<PatientLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
@@ -82,7 +93,7 @@ export default function App() {
             <Route path="settings" element={<AdminSettings />} />
            </Route>
 
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthProvider>

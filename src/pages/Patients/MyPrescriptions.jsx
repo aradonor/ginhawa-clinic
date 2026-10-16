@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
 import API from "../../api/axios";
+import EmptyState from "../../components/ui/EmptyState";
+import Icon from "../../components/ui/Icon";
+import Loading from "../../components/ui/Loading";
+import { formatDate } from "../../utils/format";
 
 export default function Prescriptions() {
   const [prescriptions, setPrescriptions] = useState([]);
@@ -21,68 +25,67 @@ export default function Prescriptions() {
     fetchPrescriptions();
   }, []);
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: "40px" }}>Loading prescriptions...</div>;
+  if (loading) return <Loading text="Loading your prescriptions…" />;
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}>
-      <div>
-        <h2>Prescriptions</h2>
-        {error && <p style={{ color: "red" }}>{error}</p>}
+    <div className="pt">
+      <p className="pt-lead">The medicines your doctor prescribed, with how to take them.</p>
+      {error && <p className="ui-alert ui-alert--error" role="alert">{error}</p>}
 
-        {prescriptions.length === 0 ? (
-          <p>No prescriptions found.</p>
-        ) : (
-          <table border="1" cellPadding="8" cellSpacing="0">
-            <thead>
-              <tr>
-                <th>Date Issued</th>
-                <th>Doctor</th>
-                <th>Medication</th>
-                <th>Dosage</th>
-                <th>Instructions</th>
-              </tr>
-            </thead>
-            <tbody>
-            {prescriptions.map((p) => {
-              const dateVal = p.date || p.createdAt?.split("T")[0] || "N/A";
-              const docName = p.doctorName || p.doctor?.name || "Attending Physician";
-              
-              // Check if the prescription uses a medicines array or root-level fields
-              const medsList = p.medicines && p.medicines.length > 0 ? p.medicines : null;
+      {prescriptions.length === 0 ? (
+        <EmptyState
+          icon="pill"
+          title="No prescriptions yet"
+          text="When a doctor prescribes medicine, it will be listed here."
+        />
+      ) : (
+        <ul className="pt-list">
+          {prescriptions.map((p) => {
+            const dateVal = p.date || p.createdAt?.split("T")[0] || "";
+            const docName = p.doctorName || p.doctor?.name || "Attending Physician";
 
-              if (medsList) {
-                // Render each medicine inside the array
-                return medsList.map((med, index) => (
-                  <tr key={`${p._id}-${index}`}>
-                    <td>{index === 0 ? dateVal : ""}</td>
-                    <td>{index === 0 ? docName : ""}</td>
-                    <td>{med.medication || med.name || med.itemName || "N/A"}</td>
-                    <td>{med.dosage || med.dose || "N/A"}</td>
-                    <td>{med.instructions || med.note || "N/A"}</td>
-                  </tr>
-                ));
-              }
+            // A prescription uses either a medicines array or root-level fields
+            const medsList =
+              p.medicines && p.medicines.length > 0
+                ? p.medicines.map((med) => ({
+                    name: med.medication || med.name || med.itemName || "N/A",
+                    dosage: med.dosage || med.dose || "",
+                    instructions: med.instructions || med.note || "",
+                  }))
+                : [
+                    {
+                      name: p.medication || p.medicineName || "No medicines listed",
+                      dosage: p.dosage || "",
+                      instructions: p.instructions || "",
+                    },
+                  ];
 
-              // Fallback for single root-level structure
-              return (
-                <tr key={p._id}>
-                  <td>{dateVal}</td>
-                  <td>{docName}</td>
-                  <td>{p.medication || p.medicineName || "No medicines listed"}</td>
-                  <td>{p.dosage || "N/A"}</td>
-                  <td>{p.instructions || "N/A"}</td>
-                </tr>
-              );
-            })}
-            {prescriptions.length === 0 && (
-              <tr>
-                <td colSpan="5" style={{ textAlign: "center", padding: "20px" }}>No prescriptions found.</td>
-              </tr>
-            )}
-          </tbody>
-          </table>
-        )}
-      </div>
+            return (
+              <li key={p._id} className="ui-card pt-record">
+                <div className="pt-record__head">
+                  <div>
+                    <h2 className="pt-record__title">Prescribed by {docName}</h2>
+                    <p className="pt-record__meta">
+                      <span><Icon name="calendar" size={15} />{dateVal ? formatDate(dateVal) : "N/A"}</span>
+                    </p>
+                  </div>
+                </div>
+                <ul className="pt-meds">
+                  {medsList.map((med, index) => (
+                    <li key={`${p._id}-${index}`} className="pt-med">
+                      <div className="pt-med__top">
+                        <span className="pt-med__name">{med.name}</span>
+                        {med.dosage && <span className="pt-med__dose">{med.dosage}</span>}
+                      </div>
+                      {med.instructions && <p className="pt-med__note">{med.instructions}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
